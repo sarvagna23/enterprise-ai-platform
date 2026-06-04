@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+langgraph
+langchain
+langchain-anthropic
+langchain-core
+langchain-community
+chromadb
+sentence-transformers
+psycopg2-binary
+sqlalchemy
+pytest
+python-dotenv
+httpx
