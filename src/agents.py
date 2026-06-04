@@ -49,6 +49,20 @@ def monitor_agent(state: AgentState) -> AgentState:
     status = "approved" if "APPROVED" in review.upper() else "retry"
     return {**state, "review": review, "status": status, "iterations": state["iterations"] + 1}
 
+# --- ReAct Agent ---
+def react_agent(state: AgentState) -> AgentState:
+    print(f"[ReAct] Reasoning and acting...")
+    messages = [
+        SystemMessage(content="""You are a ReAct agent. Follow this pattern:
+Thought: Think about what needs to be done
+Action: Take a specific action
+Observation: What you observe from the action
+Repeat until you reach a final answer."""),
+        HumanMessage(content=f"Task: {state['task']}\n\nUse ReAct reasoning to solve this step by step.")
+    ]
+    response = llm.invoke(messages)
+    return {**state, "result": response.content, "status": "react_complete"}
+
 def should_retry(state: AgentState) -> str:
     if state["status"] == "retry" and state["iterations"] < 2:
         return "executor"
@@ -59,8 +73,11 @@ def build_agent_graph():
     graph.add_node("planner", planner_agent)
     graph.add_node("executor", executor_agent)
     graph.add_node("monitor", monitor_agent)
+    graph.add_node("react", react_agent)
+
     graph.set_entry_point("planner")
-    graph.add_edge("planner", "executor")
+    graph.add_edge("planner", "react")
+    graph.add_edge("react", "executor")
     graph.add_edge("executor", "monitor")
     graph.add_conditional_edges("monitor", should_retry, {
         "executor": "executor",

@@ -80,5 +80,24 @@ def query_rag(request: QueryRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/agent/react")
+def run_react_agent(request: TaskRequest):
+    try:
+        result = graph.invoke({
+            "task": request.task,
+            "plan": None,
+            "result": None,
+            "review": None,
+            "status": "pending",
+            "iterations": 0
+        })
+        return {
+            "status": result["status"],
+            "reasoning": result["result"],
+            "iterations": result["iterations"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
